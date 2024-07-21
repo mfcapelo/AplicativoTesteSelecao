@@ -1,7 +1,39 @@
 ﻿
 $(document).ready(function () {
+    // Validação e formatação do CPF no evento blur
+    $('#formCadastro #CPF').blur(function () {
+        const cpfInput = $(this);
+        let cpf = cpfInput.val();
+        cpf = formataCPF(cpf);
+        cpfInput.val(cpf);
+        if (!isValidCPF(cpf)) {  // Usa a função isValidCPF do arquivo FI.ValidacaoCPF.js
+            ModalDialog("CPF inválido.", "Por favor, insira um CPF válido.")
+                .then(() => {
+                    cpfInput.focus();
+                    cpfInput.addClass('is-invalid');
+                });
+        } else {
+            cpfInput.removeClass('is-invalid');
+        }
+    });
+
     $('#formCadastro').submit(function (e) {
         e.preventDefault();
+
+        // Validar e formatar antes de enviar 
+        const cpfInput = $(this).find("#CPF");
+        let cpf = cpfInput.val();
+        cpf = formataCPF(cpf);
+        cpfInput.val(cpf);
+        if (!isValidCPF(cpf)) {  // Usa a função isValidCPF do arquivo FI.ValidacaoCPF.js
+            ModalDialog("CPF inválido.", "Por favor, insira um CPF válido.")
+                .then(() => {
+                    cpfInput.focus();
+                    cpfInput.addClass('is-invalid');
+                });
+            return; // Garante que o código abaixo não seja executado até o modal ser fechado
+        }
+
         $.ajax({
             url: urlPost,
             method: "POST",
@@ -14,7 +46,8 @@ $(document).ready(function () {
                 "Estado": $(this).find("#Estado").val(),
                 "Cidade": $(this).find("#Cidade").val(),
                 "Logradouro": $(this).find("#Logradouro").val(),
-                "Telefone": $(this).find("#Telefone").val()
+                "Telefone": $(this).find("#Telefone").val(),
+                "CPF": cpf
             },
             error:
             function (r) {

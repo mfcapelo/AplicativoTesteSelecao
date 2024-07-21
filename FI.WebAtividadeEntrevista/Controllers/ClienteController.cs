@@ -6,6 +6,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using FI.AtividadeEntrevista.DML;
+using System.Data.SqlClient;
 
 namespace WebAtividadeEntrevista.Controllers
 {
@@ -15,7 +16,6 @@ namespace WebAtividadeEntrevista.Controllers
         {
             return View();
         }
-
 
         public ActionResult Incluir()
         {
@@ -38,21 +38,36 @@ namespace WebAtividadeEntrevista.Controllers
             }
             else
             {
-                
-                model.Id = bo.Incluir(new Cliente()
-                {                    
-                    CEP = model.CEP,
-                    Cidade = model.Cidade,
-                    Email = model.Email,
-                    Estado = model.Estado,
-                    Logradouro = model.Logradouro,
-                    Nacionalidade = model.Nacionalidade,
-                    Nome = model.Nome,
-                    Sobrenome = model.Sobrenome,
-                    Telefone = model.Telefone
-                });
+                try
+                {
+                    model.Id = bo.Incluir(new Cliente()
+                    {
+                        CEP = model.CEP,
+                        Cidade = model.Cidade,
+                        Email = model.Email,
+                        Estado = model.Estado,
+                        Logradouro = model.Logradouro,
+                        Nacionalidade = model.Nacionalidade,
+                        Nome = model.Nome,
+                        Sobrenome = model.Sobrenome,
+                        Telefone = model.Telefone,
+                        CPF = model.CPF,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Verifique se a mensagem da exceção contém a violação da chave única para CPF
+                    if (ex.Message.Contains("Violation of UNIQUE KEY constraint 'UC_CPF'"))
+                    {
+                        Response.StatusCode = 400;
+                        return Json("CPF já cadastrado.");
+                    }
 
-           
+                    // Se a exceção não for a esperada, retorne uma mensagem genérica
+                    Response.StatusCode = 500;
+                    return Json("Ocorreu um erro interno no servidor.");
+                }
+
                 return Json("Cadastro efetuado com sucesso");
             }
         }
@@ -73,20 +88,38 @@ namespace WebAtividadeEntrevista.Controllers
             }
             else
             {
-                bo.Alterar(new Cliente()
+                try
                 {
-                    Id = model.Id,
-                    CEP = model.CEP,
-                    Cidade = model.Cidade,
-                    Email = model.Email,
-                    Estado = model.Estado,
-                    Logradouro = model.Logradouro,
-                    Nacionalidade = model.Nacionalidade,
-                    Nome = model.Nome,
-                    Sobrenome = model.Sobrenome,
-                    Telefone = model.Telefone
-                });
-                               
+                    bo.Alterar(new Cliente()
+                    {
+                        Id = model.Id,
+                        CEP = model.CEP,
+                        Cidade = model.Cidade,
+                        Email = model.Email,
+                        Estado = model.Estado,
+                        Logradouro = model.Logradouro,
+                        Nacionalidade = model.Nacionalidade,
+                        Nome = model.Nome,
+                        Sobrenome = model.Sobrenome,
+                        Telefone = model.Telefone,
+                        CPF = model.CPF,
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Verifique se a mensagem da exceção contém a violação da chave única para CPF
+                    if (ex.Message.Contains("Violation of UNIQUE KEY constraint 'UC_CPF'"))
+                    {
+                        Response.StatusCode = 400;
+                        return Json("CPF já cadastrado.");
+                    }
+
+                    // Se a exceção não for a esperada, retorne uma mensagem genérica
+                    Response.StatusCode = 500;
+                    return Json("Ocorreu um erro interno no servidor.");
+                }
+
+
                 return Json("Cadastro alterado com sucesso");
             }
         }
@@ -111,7 +144,8 @@ namespace WebAtividadeEntrevista.Controllers
                     Nacionalidade = cliente.Nacionalidade,
                     Nome = cliente.Nome,
                     Sobrenome = cliente.Sobrenome,
-                    Telefone = cliente.Telefone
+                    Telefone = cliente.Telefone,
+                    CPF = cliente.CPF,
                 };
 
             
