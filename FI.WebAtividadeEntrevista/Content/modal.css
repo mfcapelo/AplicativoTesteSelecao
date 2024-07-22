@@ -1,0 +1,20 @@
+.position-relative {
+    position: relative;
+}
+
+.position-absolute {
+    position: absolute;
+}
+
+.bottom-15 {
+    bottom: 15px;
+}
+
+.end-0 {
+    right: 0;
+    padding:0;
+}
+
+.modal-lg{
+    width:50%;
+}

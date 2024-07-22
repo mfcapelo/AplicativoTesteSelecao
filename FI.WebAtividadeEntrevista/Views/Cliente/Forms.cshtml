@@ -1,5 +1,4 @@
-﻿
-<form id="formCadastro" method="post">
+﻿<form id="formCadastro" method="post">
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
@@ -78,13 +77,72 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-6">
+            <div class="pull-left">
+                <button id="beneficiarios_btn" type="button" class="btn btn-sm btn-primary">Beneficiários</button>
+            </div>
+        </div>
+        <div class="col-lg-6">
             <div class="pull-right">
                 <button type="submit" class="btn btn-sm btn-success">Salvar</button>
                 @Html.ActionLink("Voltar", "Index", "Cliente", new { }, new { @class = "btn btn-sm btn-danger" })
             </div>
         </div>
     </div>
-
-
 </form>
+
+<link rel="stylesheet" type="text/css" href="/Content/modal.css" />
+<div class="modal fade" id="beneficiariosModal" tabindex="-1" role="dialog" aria-labelledby="beneficiariosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Beneficiários</h4>
+            </div>
+            <div class="modal-body">
+                <form id="beneficiariosForm">
+                    <div class="row position-relative">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="CPFBeneficiario">CPF:</label>
+                                <input required="required" type="text" class="form-control" id="CPFBeneficiario" name="CPFBeneficiario" placeholder="Ex.: 010.011.111-00" maxlength="14">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="NomeBeneficiario">Nome:</label>
+                                <input required="required" type="text" class="form-control" id="NomeBeneficiario" name="NomeBeneficiario" placeholder="Ex.: João" maxlength="50">
+                            </div>
+                        </div>
+                        <div class="col-md-3 position-absolute bottom-15 end-0">
+                            <button id="incluir_btn" type="button" class="btn btn-sm btn-success">Incluir</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Tabela para exibir a lista de beneficiários -->
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <table class="table hidden" id="beneficiariosTable">
+                            <colgroup>
+                                <col style="width: 25%;">
+                                <col style="width: 50%;">
+                                <col style="width: 25%;">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>CPF</th>
+                                    <th>Nome</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,5 +1,4 @@
-﻿
-$(document).ready(function () {
+﻿$(document).ready(function () {
     if (obj) {
         $('#formCadastro #Nome').val(obj.Nome);
         $('#formCadastro #CEP').val(obj.CEP);
@@ -11,23 +10,83 @@ $(document).ready(function () {
         $('#formCadastro #Logradouro').val(obj.Logradouro);
         $('#formCadastro #Telefone').val(obj.Telefone);
         $('#formCadastro #CPF').val(obj.CPF);
+
+        carregarBeneficiarios(obj.Id);
     }
 
     // Validação e formatação do CPF no evento blur
     $('#formCadastro #CPF').blur(function () {
-        const cpfInput = $(this);
-        let cpf = cpfInput.val();
-        cpf = formataCPF(cpf);
-        cpfInput.val(cpf);
+        validarCPF($(this));
+    });
 
-        if (!isValidCPF(cpf)) {  // Usa a função isValidCPF do arquivo FI.ValidacaoCPF.js
-            ModalDialog("CPF inválido.", "Por favor, insira um CPF válido.")
-                .then(() => {
-                    cpfInput.focus();
-                    cpfInput.addClass('is-invalid');
-                });
+    $('#beneficiariosForm #CPFBeneficiario').blur(function () {
+        validarCPF($(this));
+    });
+
+    $("#beneficiarios_btn").click(function () {
+        $("#beneficiariosModal").modal('show');
+    });
+
+    $("#incluir_btn").click(function () {
+        var cpf = $("#beneficiariosForm #CPFBeneficiario").val().trim();
+        var nome = $("#beneficiariosForm #NomeBeneficiario").val().trim();
+
+        if (cpf && nome) {
+
+            // Verificar se o cpf já está na lista 
+            var cpfExiste = false;
+            $("#beneficiariosTable tbody tr").each(function () {
+                var cpfExistente = $(this).find("td:eq(0)").text().trim();
+                if (cpfExistente === cpf) {
+                    cpfExiste = true;
+                    return false; // interrompe o loop
+                }
+            });
+
+            if (cpfExiste) {
+                ModalDialog("CPF já incluído.", "Insira um outro CPF.")
+                    .then(() => {
+                        $("#beneficiariosForm #CPFBeneficiario").focus();
+                    });
+                $("#beneficiariosForm #CPFBeneficiario").val('');
+                $("#beneficiariosForm #NomeBeneficiario").val(''); 
+                return false; 
+            }
+
+            $("#beneficiariosTable tbody").append(`
+            <tr>
+                <td>${cpf}</td>
+                <td>${nome}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary btn-alterar">Alterar</button>
+                    <button class="btn btn-sm btn-primary btn-excluir">Excluir</button>
+                </td>
+            </tr>
+        `);
+            $("#beneficiariosTable").removeClass('hidden');
+            $("#beneficiariosForm #CPFBeneficiario").val('');
+            $("#beneficiariosForm #NomeBeneficiario").val('');
         } else {
-            cpfInput.removeClass('is-invalid');
+            ModalDialog("Por favor, preencha todos os campos.");
+        }
+    });
+
+    $("#beneficiariosTable").on("click", ".btn-excluir", function () {
+        $(this).closest("tr").remove();
+        if ($("#beneficiariosTable tbody tr").length === 0) {
+            $("#beneficiariosTable").addClass('d-hidden');
+        }
+    });
+
+    $("#beneficiariosTable").on("click", ".btn-alterar", function () {
+        var tr = $(this).closest("tr");
+        var cpf = tr.find("td:eq(0)").text();
+        var nome = tr.find("td:eq(1)").text();
+        $("#beneficiariosForm #CPFBeneficiario").val(cpf);
+        $("#beneficiariosForm #NomeBeneficiario").val(nome);
+        tr.remove();
+        if ($("#beneficiariosTable tbody tr").length === 0) {
+            $("#beneficiariosTable").addClass('hidden');
         }
     });
 
@@ -36,17 +95,17 @@ $(document).ready(function () {
 
         // Validar e formatar antes de enviar
         const cpfInput = $(this).find("#CPF");
-        let cpf = cpfInput.val();
-        cpf = formataCPF(cpf);
-        cpfInput.val(cpf);
-        if (!isValidCPF(cpf)) {  // Usa a função isValidCPF do arquivo FI.ValidacaoCPF.js
-            ModalDialog("CPF inválido.", "Por favor, insira um CPF válido.")
-                .then(() => {
-                    cpfInput.focus();
-                    cpfInput.addClass('is-invalid');
-                });
-            return; // Garante que o código abaixo não seja executado até o modal ser fechado
+        if (!validarCPF(cpfInput)) {
+            return; 
         }
+
+        // Captura dados dos beneficiários
+        let beneficiarios = [];
+        $("#beneficiariosTable tbody tr").each(function () {
+            let cpf = $(this).find("td:eq(0)").text();
+            let nome = $(this).find("td:eq(1)").text();
+            beneficiarios.push({ CPF: cpf, Nome: nome });
+        });
 
         $.ajax({
             url: urlPost,
@@ -61,24 +120,72 @@ $(document).ready(function () {
                 "Cidade": $(this).find("#Cidade").val(),
                 "Logradouro": $(this).find("#Logradouro").val(),
                 "Telefone": $(this).find("#Telefone").val(),
-                "CPF": cpf
+                "CPF": $(this).find("#CPF").val(),
+                "Beneficiarios": beneficiarios 
             },
             error:
-            function (r) {
-                if (r.status == 400)
-                    ModalDialog("Ocorreu um erro", r.responseJSON);
-                else if (r.status == 500)
-                    ModalDialog("Ocorreu um erro", "Ocorreu um erro interno no servidor.");
-            },
+                function (r) {
+                    if (r.status == 400)
+                        ModalDialog("Ocorreu um erro", r.responseJSON);
+                    else if (r.status == 500)
+                        ModalDialog("Ocorreu um erro", "Ocorreu um erro interno no servidor.");
+                },
             success:
-            function (r) {
-                ModalDialog("Sucesso!", r)
-                $("#formCadastro")[0].reset();                                
-                window.location.href = urlRetorno;
-            }
+                function (r) {
+                    ModalDialog("Sucesso!", r)
+                    $("#formCadastro")[0].reset();
+                    $("#beneficiariosTable tbody").empty(); 
+                    $("#beneficiariosTable").addClass('hidden'); 
+                    window.location.href = urlRetorno;
+                }
         });
     })
-    
+
+    function carregarBeneficiarios(idCliente) {
+        $.ajax({
+            url: '/Cliente/ListarBeneficiarios',
+            method: 'GET',
+            data: { idCliente: idCliente },
+            success: function (data) {
+                if (data && data.length > 0) {
+                    data.forEach(function (beneficiario) {
+                        $("#beneficiariosTable tbody").append(`
+                            <tr>
+                                <td>${beneficiario.CPF}</td>
+                                <td>${beneficiario.Nome}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary btn-alterar">Alterar</button>
+                                    <button class="btn btn-sm btn-primary btn-excluir">Excluir</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                    $("#beneficiariosTable").removeClass('hidden');
+                }
+            },
+            error: function (error) {
+                console.log("Erro ao carregar beneficiários: ", error);
+            }
+        });
+    }
+
+    function validarCPF(cpfInput) {
+        let cpf = cpfInput.val();
+        cpf = formataCPF(cpf);
+        cpfInput.val(cpf);
+
+        if (!isValidCPF(cpf)) {  // Usa a função isValidCPF do arquivo FI.ValidacaoCPF.js
+            ModalDialog("CPF inválido.", "Por favor, insira um CPF válido.")
+                .then(() => {
+                    cpfInput.focus();
+                    cpfInput.addClass('is-invalid');
+                });
+            return false;
+        } else {
+            cpfInput.removeClass('is-invalid');
+            return true;
+        }
+    }
 })
 
 function ModalDialog(titulo, texto) {
@@ -104,11 +211,10 @@ function ModalDialog(titulo, texto) {
     $('body').append(texto);
     $('#' + random).modal('show');
 
-    // Retorna uma promessa que é resolvida quando o modal é fechado
     return new Promise((resolve) => {
         $('#' + modalId).on('hidden.bs.modal', function () {
-            $(this).remove(); // Remove o modal do DOM
-            resolve(); // Resolve a promessa
+            $(this).remove(); 
+            resolve(); 
         });
     });
 }
