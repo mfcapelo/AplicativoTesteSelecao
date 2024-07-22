@@ -133,10 +133,15 @@
             success:
                 function (r) {
                     ModalDialog("Sucesso!", r)
-                    $("#formCadastro")[0].reset();
-                    $("#beneficiariosTable tbody").empty(); 
-                    $("#beneficiariosTable").addClass('hidden'); 
-                    window.location.href = urlRetorno;
+                        .then(() => {
+                            $("#formCadastro")[0].reset();
+                            $("#beneficiariosTable tbody").empty();
+                            $("#beneficiariosTable").addClass('hidden');
+                            window.location.href = urlRetorno;
+                        })
+                        .catch(() => {
+                            console.log("Modal não exibido.");
+                        });
                 }
         });
     })
@@ -190,7 +195,7 @@
 
 function ModalDialog(titulo, texto) {
     var random = Math.random().toString().replace('.', '');
-    var texto = '<div id="' + random + '" class="modal fade">                                                               ' +
+    var textoModal = '<div id="' + random + '" class="modal fade">                                                               ' +
         '        <div class="modal-dialog">                                                                                 ' +
         '            <div class="modal-content">                                                                            ' +
         '                <div class="modal-header">                                                                         ' +
@@ -208,11 +213,11 @@ function ModalDialog(titulo, texto) {
         '  </div><!-- /.modal-dialog -->                                                                                    ' +
         '</div> <!-- /.modal -->                                                                                        ';
 
-    $('body').append(texto);
+    $('body').append(textoModal);
     $('#' + random).modal('show');
 
     return new Promise((resolve) => {
-        $('#' + modalId).on('hidden.bs.modal', function () {
+        $('#' + random).on('hidden.bs.modal', function () {
             $(this).remove(); 
             resolve(); 
         });
